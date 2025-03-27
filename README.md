@@ -1,4 +1,4 @@
-File .env (Token Bot Telegram)
+### File .env (Token Bot Telegram)
 Buat file .env di folder yang sama, lalu isi dengan:
 ```
 BOT_TOKEN=ISI_TOKEN_BOT_MU_DISINI
