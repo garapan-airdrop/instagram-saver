@@ -9,23 +9,26 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
 async function downloadInstagramImage(url) {
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
-
+    let browser;
     try {
+        browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const page = await browser.newPage();
+
         await page.goto(url, { waitUntil: 'networkidle2' });
-        await page.waitForSelector('article img');
+        await page.waitForSelector('article img', { timeout: 60000 }); // Tunggu hingga 60 detik
         const imageUrl = await page.evaluate(() => {
             const img = document.querySelector('article img');
             return img ? img.src : null;
         });
 
-        await browser.close();
         return imageUrl;
     } catch (error) {
         console.error('Gagal mengambil gambar:', error);
-        await browser.close();
         return null;
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
 }
 
@@ -44,16 +47,20 @@ bot.on('text', async (ctx) => {
         ctx.telegram.editMessageText(ctx.chat.id, message.message_id, null, loadingMessages[index]);
     }, 1000);
 
-    const filename = ig_download_${Date.now()};
-    const outputPath = ${filename}.mp4;
+    const filename = `ig_download_${Date.now()}`;
+    const outputPath = `${filename}.mp4`;
 
-    exec(yt-dlp -o ${outputPath} ${url}, async (error, stdout, stderr) => {
+    exec(`yt-dlp -o ${outputPath} ${url}`, async (error, stdout, stderr) => {
         clearInterval(interval);
         ctx.telegram.editMessageText(ctx.chat.id, message.message_id, null, '✅ Unduhan selesai!');
 
         if (!error && fs.existsSync(outputPath)) {
             await ctx.replyWithVideo({ source: outputPath });
-            fs.unlinkSync(outputPath);
+            try {
+                fs.unlinkSync(outputPath);
+            } catch (unlinkError) {
+                console.error('Gagal menghapus file:', unlinkError);
+            }
         } else {
             console.log('Video tidak ditemukan, coba ambil gambar...');
             const imageUrl = await downloadInstagramImage(url);
