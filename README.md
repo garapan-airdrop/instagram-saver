@@ -31,7 +31,7 @@ node main.js
 ```
 
 Kesimpulan
-✅ File utama: main.js
-✅ File konfigurasi: .env
-✅ Bot bisa mengunduh video dan gambar dari Instagram
-✅ Pakai yt-dlp untuk video, pakai Puppeteer untuk gambar
+- ✅ File utama: main.js
+- ✅ File konfigurasi: .env
+- ✅ Bot bisa mengunduh video dan gambar dari Instagram
+- ✅ Pakai yt-dlp untuk video, pakai Puppeteer untuk gambar
