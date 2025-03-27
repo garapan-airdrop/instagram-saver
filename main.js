@@ -53,20 +53,20 @@ bot.on('text', async (ctx) => {
     const filename = `ig_download_${Date.now()}`;
     const outputPath = `${filename}.mp4`;
 
-    exec(`yt-dlp -f bestvideo+bestaudio --merge-output-format mp4 -o ${outputPath} ${url}`, async (error, stdout, stderr) => {
+    exec(`yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4" --merge-output-format mp4 -o ${outputPath} ${url}`, async (error, stdout, stderr) => {
         clearInterval(interval);
 
         if (!error && fs.existsSync(outputPath)) {
             const stats = fs.statSync(outputPath);
             
-            // Jika ukuran file lebih dari 1MB, anggap sebagai video
+            // Jika ukuran file lebih dari 1MB, kirim sebagai video
             if (stats.size > 1024 * 1024) {
                 await ctx.telegram.editMessageText(ctx.chat.id, message.message_id, null, '✅ Video berhasil diunduh!');
                 await ctx.replyWithVideo({ source: outputPath });
                 fs.unlinkSync(outputPath);
                 return;
             } else {
-                console.log('File terlalu kecil, mungkin bukan video.');
+                console.log('File terlalu kecil, mungkin hanya thumbnail.');
             }
         }
 
