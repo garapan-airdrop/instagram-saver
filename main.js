@@ -9,10 +9,11 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const bot = new Telegraf(BOT_TOKEN);
 
 async function downloadInstagramImage(url) {
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
-
+    let browser;
     try {
+        browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const page = await browser.newPage();
+
         await page.goto(url, { waitUntil: 'networkidle2' });
         await page.waitForSelector('article img');
         const imageUrl = await page.evaluate(() => {
@@ -20,12 +21,14 @@ async function downloadInstagramImage(url) {
             return img ? img.src : null;
         });
 
-        await browser.close();
         return imageUrl;
     } catch (error) {
         console.error('Gagal mengambil gambar:', error);
-        await browser.close();
         return null;
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
 }
 
@@ -53,7 +56,11 @@ bot.on('text', async (ctx) => {
 
         if (!error && fs.existsSync(outputPath)) {
             await ctx.replyWithVideo({ source: outputPath });
-            fs.unlinkSync(outputPath);
+            try {
+                fs.unlinkSync(outputPath);
+            } catch (unlinkError) {
+                console.error('Gagal menghapus file:', unlinkError);
+            }
         } else {
             console.log('Video tidak ditemukan, coba ambil gambar...');
             const imageUrl = await downloadInstagramImage(url);
@@ -66,6 +73,8 @@ bot.on('text', async (ctx) => {
     });
 });
 
-bot.launch();
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+(async () => {
+    await bot.launch();
+    process.once('SIGINT', () => bot.stop('SIGINT'));
+    process.once('SIGTERM', () => bot.stop('SIGTERM'));
+})();
