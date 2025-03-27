@@ -10,7 +10,7 @@ Instalasi Dependensi
 Pastikan semua package sudah diinstal dengan perintah:
 
 ```
-npm install telegraf dotenv puppeteer
+npm install telegraf dotenv
 ```
 Jika yt-dlp belum terinstal, jalankan:
 
